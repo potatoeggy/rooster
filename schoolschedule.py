@@ -19,6 +19,7 @@ YRDSB_PASSWORD = obj["YRDSB_PASSWORD"]
 WORKER_VISIBLE = obj["WORKER_VISIBLE"]
 GECKODRIVER_PATH = obj["GECKODRIVER_PATH"]
 GECKODRIVER_LOG = obj["GECKODRIVER_LOG"]
+DISCORD_URL = obj["DISCORD_URL"]
 CLASS_DATA = obj["CLASS_DATA"]
 
 # if no classes there is nothing to do
@@ -34,8 +35,7 @@ class Class:
 		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
 		self.link = link
 	
-	def send_discord_message(self):
-		DISCORD_URL=""
+	def send_discord_message(self, DISCORD_URL):
 		payload = {
 			"content": "**{0}** with {1} is now **open** at {2}.".format(self.name, self.teacher, self.link)
 		}
@@ -95,7 +95,7 @@ while now() < latest and len(sorted_classes) > 0:
 			html = driver.page_source
 			if "Ready to join?" in html:
 				# meet is open
-				c.send_discord_message()
+				c.send_discord_message(DISCORD_URL)
 				classes.remove(c)
 			elif "Not your computer?" in html:
 				# not logged in even when bot is supposed to be logged in
