@@ -30,7 +30,7 @@ if len(CLASS_DATA) == 0:
 	exit()
 
 class Class:
-	def __init__(self, name, teacher, start_time, end_time, period, discord_role, link):
+	def __init__(self, name, teacher, start_time, end_time, period, discord_role, link, enabled):
 		self.name = name
 		self.teacher = teacher
 		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
@@ -38,6 +38,7 @@ class Class:
 		self.period = period
 		self.discord_role = discord_role
 		self.link = link
+		self.enabled = enabled
 	
 	def send_discord_message(self, DISCORD_URL):
 		payload = {
@@ -49,11 +50,11 @@ classes = []
 
 # change json to object
 for c in CLASS_DATA:
-	classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["period"], c["role"], c["link"]))
+	classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["period"], c["role"], c["link"], c["enabled"]))
 sorted_classes = sorted(classes, key=lambda c: c.start_time) # sort by time started
 
 # initialise web engine
-if RENDER_BACKEND == "geckodriver":
+if RENDER_BACKEND == "geckodriver": # note firefox is borked in headless
 	options = webdriver.firefox.options.Options()
 	options.headless = not WORKER_VISIBLE
 	profile = webdriver.FirefoxProfile()
@@ -79,14 +80,19 @@ driver.find_element_by_id("UserName").send_keys(GMAIL_ADDRESS.split("@")[0]) # Y
 driver.find_element_by_id("Password").send_keys(YRDSB_PASSWORD)
 driver.find_element_by_id("LoginButton").click()
 
+time.sleep(3) # google is slow
+
 if "speedbump" in driver.current_url:
 	driver.find_element_by_xpath('//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/div/button').click()
+	print("DEBUG: speedbump passed")
 
 # set up waiting vars
 driver.implicitly_wait(15)
 earliest = sorted_classes[0].start_time
 latest = sorted_classes[-1].end_time
 found = [False for i in range(len(classes))]
+enabled = [c.enabled for c in sorted_classes]
+
 def now():
 	return datetime.datetime.now()
 
@@ -102,11 +108,11 @@ while now() < latest and len(sorted_classes) > 0:
 		print("DEBUG: sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
 		time.sleep((earliest_valid_class.start_time-now()).total_seconds())
 	except ValueError:
-		# it is past the time (negative) and some things might be wrong
-		print("WARNING: Negative sleep time: overslept, may have skipped class")
+		# expected as part of regular loop (oversleep might happen but is rare)
+		pass
 	
 	for i, c in enumerate(sorted_classes):
-		if found[i]: continue
+		if found[i] or not enabled[i]: continue
 		if c.end_time <= now(): # link not found for too long
 			print("WARNING: Skipped class {0} as it is past its end time".format(c.name))
 			found[i] = True
@@ -124,6 +130,7 @@ while now() < latest and len(sorted_classes) > 0:
 			elif "Ready to join?" in html:
 				# meet is open
 				c.send_discord_message(DISCORD_URL)
+				print("Class {0} message sent", c.name)
 				found[i] = True
 			elif "Not your computer?" in html:
 				# not logged in even when bot is supposed to be logged in
@@ -142,10 +149,9 @@ while now() < latest and len(sorted_classes) > 0:
 			elif "Getting ready" in html:
 				print("WARNING: Delay is too slow, Google is still getting ready")
 			elif "You can't join this video call" in html:
-				print("ERROR: Google bot detection triggered with", c.name)
+				print("ERROR: Google bot detection triggered or not authenticated with", c.name)
 			else:
-				print("ERROR: Something is seriously broken with", c.name)
-				found[i] = True
+				print("ERROR: Something unexpected happened with", c.name)
 	
-	time.sleep(5) # combined with the delay in processing and getting this should add up to about 20-30 s delay per ping
+	time.sleep(10) # combined with the delay in processing and getting this should add up to about 20-30 s delay per ping
 driver.quit()
