@@ -153,5 +153,5 @@ while now() < latest and len(sorted_classes) > 0:
 			else:
 				print("ERROR: Something unexpected happened with", c.name)
 	
-	time.sleep(10) # combined with the delay in processing and getting this should add up to about 20-30 s delay per ping
+	time.sleep(5) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
 driver.quit()
