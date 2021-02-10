@@ -43,7 +43,8 @@ class Class:
 		payload = {
 			"content": "<@&{0}>, **{1}** with {2} is now **open** at {3} !".format(self.discord_role, self.name, self.teacher, self.link)
 		}
-		requests.post(DISCORD_URL, data=payload)
+		#requests.post(DISCORD_URL, data=payload)
+		print("yay", self.name)
 
 classes = []
 
@@ -79,6 +80,9 @@ driver.find_element_by_id("UserName").send_keys(GMAIL_ADDRESS.split("@")[0]) # Y
 driver.find_element_by_id("Password").send_keys(YRDSB_PASSWORD)
 driver.find_element_by_id("LoginButton").click()
 
+if "speedbump" in driver.current_url:
+	driver.find_element_by_xpath('//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/div/button').click()
+
 # set up waiting vars
 driver.implicitly_wait(15)
 earliest = sorted_classes[0].start_time
@@ -91,11 +95,16 @@ def now():
 while now() < latest and len(sorted_classes) > 0:
 	try:
 		# sleep until five minutes before next class
-		print("DEBUG: sleeping for {0} seconds".format((sorted_classes[0].start_time-now()).total_seconds()))
-		time.sleep((sorted_classes[0].start_time-now()).total_seconds())
+		earliest_valid_class = sorted_classes[0]
+		for i, c in enumerate(sorted_classes):
+			if not found[i]:
+				earliest_valid_class = c
+				break
+		print("DEBUG: sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
+		time.sleep((earliest_valid_class.start_time-now()).total_seconds())
 	except ValueError:
 		# it is past the time (negative) and some things might be wrong
-		print("WARNING: Overslept, may have skipped class")
+		print("WARNING: Negative sleep time: overslept, may have skipped class")
 	
 	for i, c in enumerate(sorted_classes):
 		if found[i]: continue
@@ -104,7 +113,6 @@ while now() < latest and len(sorted_classes) > 0:
 			found[i] = True
 			continue
 		elif c.start_time > now(): # not start time yet, we can exit because the array should be sorted
-			print(c.start_time, now())
 			break
 		elif c.start_time <= now(): # between end and start times
 			driver.get(c.link)
