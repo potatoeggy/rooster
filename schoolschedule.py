@@ -19,6 +19,9 @@ YRDSB_PASSWORD = obj["YRDSB_PASSWORD"]
 WORKER_VISIBLE = obj["WORKER_VISIBLE"]
 GECKODRIVER_PATH = obj["GECKODRIVER_PATH"]
 GECKODRIVER_LOG = obj["GECKODRIVER_LOG"]
+CHROMEDRIVER_PATH = obj["CHROMEDRIVER_PATH"]
+CHROMEDRIVER_LOG = obj["CHROMEDRIVER_LOG"]
+RENDER_BACKEND = obj["RENDER_BACKEND"]
 DISCORD_URL = obj["DISCORD_URL"]
 CLASS_DATA = obj["CLASS_DATA"]
 
@@ -49,11 +52,20 @@ for c in CLASS_DATA:
 sorted_classes = sorted(classes, key=lambda c: c.start_time) # sort by time started
 
 # initialise web engine
-options = webdriver.firefox.options.Options()
-options.headless = not WORKER_VISIBLE
-profile = webdriver.FirefoxProfile()
-profile.DEFAULT_PREFERENCES["frozen"]["dom.webdriver.enabled"] = False
-driver = webdriver.Firefox(options=options, firefox_profile=profile, executable_path=GECKODRIVER_PATH, log_path=GECKODRIVER_LOG)
+if RENDER_BACKEND == "geckodriver":
+	options = webdriver.firefox.options.Options()
+	options.headless = not WORKER_VISIBLE
+	profile = webdriver.FirefoxProfile()
+	profile.DEFAULT_PREFERENCES["frozen"]["dom.webdriver.enabled"] = False
+	driver = webdriver.Firefox(options=options, firefox_profile=profile, executable_path=GECKODRIVER_PATH, service_log_path=GECKODRIVER_LOG)
+elif RENDER_BACKEND == "chromedriver":
+	options = webdriver.ChromeOptions()
+	if not WORKER_VISIBLE:
+		options.add_argument("headless")
+	driver = webdriver.Chrome(options=options, executable_path=CHROMEDRIVER_PATH, service_log_path=CHROMEDRIVER_LOG)
+else:
+	print("ERROR: No render backend found")
+	exit()
 
 # login to google to use lookup links
 driver.get("https://accounts.google.com/ServiceLogin?continue=https://google.com")
