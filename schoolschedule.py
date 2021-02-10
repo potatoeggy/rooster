@@ -102,7 +102,7 @@ def now():
 	return datetime.datetime.now()
 
 # only run while in school hours
-while now() < latest and len(sorted_classes) > 0:
+while now() < latest and not all(found):
 	try:
 		# sleep until five minutes before next class
 		earliest_valid_class = sorted_classes[0]
