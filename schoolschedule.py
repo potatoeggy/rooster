@@ -83,6 +83,7 @@ driver.find_element_by_id("LoginButton").click()
 driver.implicitly_wait(15)
 earliest = sorted_classes[0].start_time
 latest = sorted_classes[-1].end_time
+found = [False for i in range(len(classes))]
 def now():
 	return datetime.datetime.now()
 
@@ -96,10 +97,11 @@ while now() < latest and len(sorted_classes) > 0:
 		# it is past the time (negative) and some things might be wrong
 		print("WARNING: Overslept, may have skipped class")
 	
-	for c in sorted_classes:
+	for i, c in enumerate(sorted_classes):
+		if found[i]: continue
 		if c.end_time <= now(): # link not found for too long
 			print("WARNING: Skipped class {0} as it is past its end time".format(c.name))
-			sorted_classes.remove(c)
+			found[i] = True
 			continue
 		elif c.start_time > now(): # not start time yet, we can exit because the array should be sorted
 			print(c.start_time, now())
@@ -107,30 +109,36 @@ while now() < latest and len(sorted_classes) > 0:
 		elif c.start_time <= now(): # between end and start times
 			driver.get(c.link)
 			html = driver.page_source
-			if "Ready to join?" in html:
+			if not "meet.google.com" in c.link:
+				print("WARNING: Zoom detection not available, sending Discord hook at first opportunity")
+				c.send_discord_message(DISCORD_URL)
+				found[i] = True
+				continue
+			elif "Ready to join?" in html:
 				# meet is open
 				c.send_discord_message(DISCORD_URL)
-				classes.remove(c)
+				found[i] = True
 			elif "Not your computer?" in html:
 				# not logged in even when bot is supposed to be logged in
 				print("ERROR: Bot is not logged in.")
+				exit(1)
 			elif "Check your meeting code" in html:
 				# meet is not open, continue waiting
 				pass
 			elif "Your meeting code has expired" in html:
 				# right after class or link needs to be updated, or class was dismissed early
 				print("WARNING: Class dismissed early or link needs to be updated for", c.name)
-				classes.remove(c)
+				found[i] = True
 			elif "Invalid video call name" in html:
 				print("ERROR: Invalid link for", c.name)
-				classes.remove(c)
+				found[i] = True
 			elif "Getting ready" in html:
 				print("WARNING: Delay is too slow, Google is still getting ready")
 			elif "You can't join this video call" in html:
 				print("ERROR: Google bot detection triggered with", c.name)
 			else:
 				print("ERROR: Something is seriously broken with", c.name)
-				classes.remove(c)
+				found[i] = True
 	
 	time.sleep(5) # combined with the delay in processing and getting this should add up to about 20-30 s delay per ping
 driver.quit()
