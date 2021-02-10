@@ -129,7 +129,7 @@ while now() < latest and len(sorted_classes) > 0:
 				# not logged in even when bot is supposed to be logged in
 				print("ERROR: Bot is not logged in.")
 				exit(1)
-			elif "Check your meeting code" in html:
+			elif "Check your meeting code" in html or "You can't create a meeting yourself" in html:
 				# meet is not open, continue waiting
 				pass
 			elif "Your meeting code has expired" in html:
