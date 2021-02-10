@@ -62,6 +62,7 @@ elif RENDER_BACKEND == "chromedriver":
 	options = webdriver.ChromeOptions()
 	if not WORKER_VISIBLE:
 		options.add_argument("headless")
+		options.add_argument("user-agent=\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36\"")
 	driver = webdriver.Chrome(options=options, executable_path=CHROMEDRIVER_PATH, service_log_path=CHROMEDRIVER_LOG)
 else:
 	print("ERROR: No render backend found")
