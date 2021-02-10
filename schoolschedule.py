@@ -23,11 +23,16 @@ CHROMEDRIVER_LOG = obj["CHROMEDRIVER_LOG"]
 RENDER_BACKEND = obj["RENDER_BACKEND"]
 DISCORD_URL = obj["DISCORD_URL"]
 CLASS_DATA = obj["CLASS_DATA"]
+VERBOSE=obj["verbose"]
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
 	print("Exiting because no classes found.")
 	exit()
+
+def debug(string):
+	if VERBOSE:
+		print("DEBUG:", string)
 
 class Class:
 	def __init__(self, name, teacher, start_time, end_time, period, discord_role, link, enabled):
@@ -84,7 +89,7 @@ time.sleep(3) # google is slow
 
 if "speedbump" in driver.current_url:
 	driver.find_element_by_xpath('//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/div/button').click()
-	print("DEBUG: speedbump passed")
+	debug("speedbump passed")
 
 # set up waiting vars
 driver.implicitly_wait(15)
@@ -105,7 +110,7 @@ while now() < latest and len(sorted_classes) > 0:
 			if not found[i]:
 				earliest_valid_class = c
 				break
-		print("DEBUG: sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
+		debug("sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
 		time.sleep((earliest_valid_class.start_time-now()).total_seconds())
 	except ValueError:
 		# expected as part of regular loop (oversleep might happen but is rare)
@@ -114,7 +119,7 @@ while now() < latest and len(sorted_classes) > 0:
 	for i, c in enumerate(sorted_classes):
 		if found[i] or not enabled[i]: continue
 		if c.end_time <= now(): # link not found for too long
-			print("WARNING: Skipped class {0} as it is past its end time".format(c.name))
+			debug("Skipped class {0} as it is past its end time".format(c.name))
 			found[i] = True
 			continue
 		elif c.start_time > now(): # not start time yet, we can exit because the array should be sorted
@@ -123,14 +128,14 @@ while now() < latest and len(sorted_classes) > 0:
 			driver.get(c.link)
 			html = driver.page_source
 			if not "meet.google.com" in c.link:
-				print("WARNING: Zoom detection not available, sending Discord hook at first opportunity")
+				print("Zoom detection not available for {0}, sending Discord hook at first opportunity".format(c.name))
 				c.send_discord_message(DISCORD_URL)
 				found[i] = True
 				continue
 			elif "Ready to join?" in html:
 				# meet is open
 				c.send_discord_message(DISCORD_URL)
-				print("Class {0} message sent", c.name)
+				debug("class {0} message sent".format(c.name))
 				found[i] = True
 			elif "Not your computer?" in html:
 				# not logged in even when bot is supposed to be logged in
