@@ -43,8 +43,7 @@ class Class:
 		payload = {
 			"content": "<@&{0}>, **{1}** with {2} is now **open** at {3} !".format(self.discord_role, self.name, self.teacher, self.link)
 		}
-		#requests.post(DISCORD_URL, data=payload)
-		print("yay", self.name)
+		requests.post(DISCORD_URL, data=payload)
 
 classes = []
 
