@@ -25,7 +25,25 @@ def now():
 def show_help():
 	print(
 """
-Discord-Meet Pinger - pings a role when a meeting opens
+Usage:	python schoolschedule.py [options...]
+  where options include:
+
+General options
+  --config <path>				Use configuration file at <path>.
+  --verbose						Run with extended output (debug mode).
+  --help, -h					Print this help screen.
+
+Browser options
+  --worker-visible				Run with the browser visible.
+  --render-backend <driver>		Use <driver> as the browser backend (either "geckodriver" or "chromedriver").
+  --driver-path <path>			Use <path> as the path to the driver executable.
+  --driver-log <path>			Use <path> as the path to the driver log file.
+
+Secrets options
+  --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
+  --yrdsb-password <password>	Use <password> as the password for authentication with YRDSB for Meet lookups.
+  --discord-url <url>			Use <url> as the URL to send Discord webhooks to.
+  --admin-user-id <id>			Use <id> as the Discord user ID to ping in case of emergencies.
 """)
 	exit()
 class Class:
