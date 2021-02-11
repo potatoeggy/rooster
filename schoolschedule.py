@@ -6,6 +6,7 @@ import requests
 import datetime
 import time
 import json
+import sys
 
 # load config from file
 with open("config.json", "r") as file:
@@ -14,25 +15,25 @@ with open("config.json", "r") as file:
 obj = json.loads(data)
 
 # mandatory fields
-GMAIL_ADDRESS = obj["gmail_address"]
-YRDSB_PASSWORD = obj["yrdsb_password"]
-DISCORD_URL = obj["discord_url"]
-CLASS_DATA = obj["class_data"]
-ADMIN_USER_ID = obj["admin_user_id"]
+GMAIL_ADDRESS = obj["gmail_address"] # gapps account
+YRDSB_PASSWORD = obj["yrdsb_password"] # password in plaintext :P
+DISCORD_URL = obj["discord_url"] # discord webhook url
+CLASS_DATA = obj["class_data"] # class data dict
+ADMIN_USER_ID = obj["admin_user_id"] # discord user id to ping in emergencies
 
 def in_obj(key, fallback, obj=obj):
 	return obj[key] if key in obj else fallback
 
 # optional fields
-VERBOSE = in_obj("verbose", False)
-WORKER_VISIBLE = in_obj("worker_visible", False)
-HAMMER_MODE = in_obj("hammer_mode", True)
-HAMMER_DELAY = in_obj("hammer_delay", 20)
+VERBOSE = in_obj("verbose", False) # if debug statements are printed
+WORKER_VISIBLE = in_obj("worker_visible", False) # if browser window is visible
+HAMMER_MODE = in_obj("hammer_mode", True) # if start time and end time should be ignored
+HAMMER_DELAY = in_obj("hammer_delay", 20) # delay between pings in hammer mode
 GECKODRIVER_PATH = in_obj("geckodriver_path", "/usr/bin/geckodriver")
 GECKODRIVER_LOG = in_obj("geckodriver_log", "./geckodriver.log")
 CHROMEDRIVER_PATH = in_obj("chromedriver_path", "/usr/bin/chromedriver")
 CHROMEDRIVER_LOG = in_obj("chromedriver_log", "./chromedriver.log")
-RENDER_BACKEND = in_obj("render_backend", "chromedriver")
+RENDER_BACKEND = in_obj("render_backend", "chromedriver") # one of "chromedriver" or "geckodriver"
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
@@ -90,6 +91,15 @@ class Class:
 		self.link = link
 		self.enabled = enabled
 	
+	def __init__(self, name, teacher, discord_role, link, enabled):
+		self.name = name
+		self.teacher = teacher
+		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
+		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
+		self.discord_role = discord_role
+		self.link = link
+		self.enabled = enabled
+	
 	def send_discord_message(self, DISCORD_URL):
 		payload = {
 			"content": "<@&{0}>, **{1}** with {2} is now **open** at <{3}> !".format(self.discord_role, self.name, self.teacher, self.link)
@@ -99,9 +109,17 @@ class Class:
 classes = []
 
 # change json to object
-for c in CLASS_DATA:
-	classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["role"], c["link"], c["enabled"]))
-sorted_classes = sorted(classes, key=lambda c: c.start_time) # sort by time started
+sorted_classes = []
+if not HAMMER_MODE:
+	for c in CLASS_DATA:
+		classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["role"], c["link"], c["enabled"]))
+
+	sorted_classes = sorted(classes, key=lambda c: c.start_time) # sort by time started
+else:
+	for c in CLASS_DATA:
+		classes.append(Class(c["name"], c["teacher"], c["role"], c["link"], c["enabled"]))
+
+	sorted_classes = classes # pass it over since no sorting needed while hammer
 
 # initialise web engine
 if RENDER_BACKEND == "geckodriver": # note firefox is borked in headless
