@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from selenium import webdriver
+from collections import namedtuple
 import requests
 import datetime
 import time
@@ -10,35 +11,40 @@ import json
 with open("config.json", "r") as file:
 	data = file.read()
 
-# TODO: allow some json fields to be empty and initialise defaults
-
 obj = json.loads(data)
-GMAIL_ADDRESS = obj["GMAIL_ADDRESS"]
-YRDSB_PASSWORD = obj["YRDSB_PASSWORD"]
-WORKER_VISIBLE = obj["WORKER_VISIBLE"]
-GECKODRIVER_PATH = obj["GECKODRIVER_PATH"]
-GECKODRIVER_LOG = obj["GECKODRIVER_LOG"]
-CHROMEDRIVER_PATH = obj["CHROMEDRIVER_PATH"]
-CHROMEDRIVER_LOG = obj["CHROMEDRIVER_LOG"]
-RENDER_BACKEND = obj["RENDER_BACKEND"]
-DISCORD_URL = obj["DISCORD_URL"]
-CLASS_DATA = obj["CLASS_DATA"]
-verbose=obj["verbose"]
-admin_user_id=obj["admin_user_id"]
-hammer_mode=obj["hammer_mode"]
-hammer_delay=obj["hammer_delay"]
+
+# mandatory fields
+GMAIL_ADDRESS = obj["gmail_address"]
+YRDSB_PASSWORD = obj["yrdsb_password"]
+DISCORD_URL = obj["discord_url"]
+CLASS_DATA = obj["class_data"]
+ADMIN_USER_ID = obj["admin_user_id"]
+
+def in_obj(key, fallback, obj=obj):
+	return obj[key] if key in obj else fallback
+
+# optional fields
+VERBOSE = in_obj("verbose", False)
+WORKER_VISIBLE = in_obj("worker_visible", False)
+HAMMER_MODE = in_obj("hammer_mode", True)
+HAMMER_DELAY = in_obj("hammer_delay", 20)
+GECKODRIVER_PATH = in_obj("geckodriver_path", "/usr/bin/geckodriver")
+GECKODRIVER_LOG = in_obj("geckodriver_log", "./geckodriver.log")
+CHROMEDRIVER_PATH = in_obj("chromedriver_path", "/usr/bin/chromedriver")
+CHROMEDRIVER_LOG = in_obj("chromedriver_log", "./chromedriver.log")
+RENDER_BACKEND = in_obj("render_backend", "chromedriver")
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
 	send_help("Exiting because no classes found.")
 
 def debug(string):
-	if verbose:
+	if VERBOSE:
 		print("DEBUG:", string)
 
 def send_help(string="", abort=True):
 	if string != "": print(string)
-	payload = { "content": f"<@!{admin_user_id}>, manual intervention required! Help help things are on fire help help " + string }
+	payload = { "content": f"<@!{ADMIN_USER_ID}>, manual intervention required! Help help things are on fire help help " + string }
 	requests.post(DISCORD_URL, data=payload)
 	if abort: exit()
 
@@ -142,7 +148,7 @@ def now():
 
 # only run while in school hours
 while now() < latest and not all(found):
-	if not hammer_mode: # use the times given for each class
+	if not HAMMER_MODE: # use the times given for each class
 		try:
 			# sleep until five minutes before next class
 			earliest_valid_class = sorted_classes[0]
@@ -158,7 +164,7 @@ while now() < latest and not all(found):
 	
 	for i, c in enumerate(sorted_classes):
 		if found[i] or not enabled[i]: continue
-		if hammer_mode:
+		if HAMMER_MODE:
 			ping_meet(c, driver)
 		elif c.end_time <= now(): # link not found for too long
 			debug("Skipped class {0} as it is past its end time".format(c.name))
@@ -169,5 +175,5 @@ while now() < latest and not all(found):
 		elif c.start_time <= now(): # between end and start times
 			ping_meet(c, driver)
 	
-	time.sleep(5 if not hammer_mode else hammer_delay) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
+	time.sleep(5 if not HAMMER_MODE else HAMMER_DELAY) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
 driver.quit()
