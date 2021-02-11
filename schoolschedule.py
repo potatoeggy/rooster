@@ -8,8 +8,28 @@ import time
 import json
 import sys
 
+def show_help():
+	print("""
+	Discord-Meet Pinger - pings a role when a meeting opens
+	""")
+	exit()
+
+if "--help" in sys.argv or "-h" in sys.argv:
+	show_help()
+
+def in_container(key, fallback, container):
+	return container[key] if key in container else fallback
+
+CONFIG_FILE = "config.json"
+try:
+	CONFIG_FILE = sys.argv[sys.argv.index("--config") + 1]
+except ValueError:
+	pass # user did not specify custom conf location
+except IndexError:
+	show_help()
+
 # load config from file
-with open("config.json", "r") as file:
+with open(CONFIG_FILE, "r") as file:
 	data = file.read()
 
 obj = json.loads(data)
@@ -21,19 +41,31 @@ DISCORD_URL = obj["discord_url"] # discord webhook url
 CLASS_DATA = obj["class_data"] # class data dict
 ADMIN_USER_ID = obj["admin_user_id"] # discord user id to ping in emergencies
 
-def in_obj(key, fallback, obj=obj):
-	return obj[key] if key in obj else fallback
+def get_config(key, fallback):
+	# TODO: check if environment variable is set and use that?
+	result = in_container(key, fallback, obj) # config file has lowest priority
+	args_key = "--" + key.replace("_", "-")
+	try:
+		if fallback is not bool:
+			result = type(fallback)(sys.argv[sys.argv.index(args_key) + 1])
+		else: # string
+			result = args_key in sys.argv # only something like --verbose is needed instead of --verbose True
+	except ValueError:
+		pass # user did not specify conf in command line
+	except IndexError:
+		show_help()
+	return result
 
 # optional fields
-VERBOSE = in_obj("verbose", False) # if debug statements are printed
-WORKER_VISIBLE = in_obj("worker_visible", False) # if browser window is visible
-HAMMER_MODE = in_obj("hammer_mode", True) # if start time and end time should be ignored
-HAMMER_DELAY = in_obj("hammer_delay", 20) # delay between pings in hammer mode
-GECKODRIVER_PATH = in_obj("geckodriver_path", "/usr/bin/geckodriver")
-GECKODRIVER_LOG = in_obj("geckodriver_log", "./geckodriver.log")
-CHROMEDRIVER_PATH = in_obj("chromedriver_path", "/usr/bin/chromedriver")
-CHROMEDRIVER_LOG = in_obj("chromedriver_log", "./chromedriver.log")
-RENDER_BACKEND = in_obj("render_backend", "chromedriver") # one of "chromedriver" or "geckodriver"
+VERBOSE = get_config("verbose", False) # if debug statements are printed
+WORKER_VISIBLE = get_config("worker_visible", False) # if browser window is visible
+HAMMER_MODE = get_config("hammer_mode", True) # if start time and end time should be ignored
+HAMMER_DELAY = get_config("hammer_delay", 20) # delay between pings in hammer mode
+GECKODRIVER_PATH = get_config("geckodriver_path", "/usr/bin/geckodriver")
+GECKODRIVER_LOG = get_config("geckodriver_log", "./geckodriver.log")
+CHROMEDRIVER_PATH = get_config("chromedriver_path", "/usr/bin/chromedriver")
+CHROMEDRIVER_LOG = get_config("chromedriver_log", "./chromedriver.log")
+RENDER_BACKEND = get_config("render_backend", "chromedriver") # one of "chromedriver" or "geckodriver"
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
