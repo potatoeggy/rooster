@@ -205,6 +205,8 @@ if __name__ == "__main__":
 	latest = sorted_classes[-1].end_time
 	found = [not c.enabled for c in sorted_classes]
 
+	debug(f"Ready.", urgent=True)
+
 	# only run while in school hours
 	if now() > latest:
 		debug(f"Current time {now()} is after 3end of last class at {latest}.")
