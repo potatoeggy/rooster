@@ -168,13 +168,13 @@ def ping_meet(c, driver, discord):
 	driver.get(c.link)
 	html = driver.page_source
 	if not "meet.google.com" in c.link:
-		print("Zoom detection not available for {0}, sending Discord hook at first opportunity".format(c.name))
+		debug(f"Zoom detection not available for {c.name}, sending Discord hook at first opportunity")
 		discord.send_message(c.get_discord_message())
 		found[i] = True
 	elif "Ready to join?" in html:
 		# meet is open
 		discord.send_message(c.get_discord_message())
-		debug("class {0} message sent".format(c.name))
+		debug(f"Class {c.name} message sent")
 		found[i] = True
 	elif "Not your computer?" in html:
 		# not logged in even when bot is supposed to be logged in
@@ -209,9 +209,9 @@ if __name__ == "__main__":
 
 	# only run while in school hours
 	if now() > latest:
-		debug(f"Current time {now()} is after 3end of last class at {latest}.")
+		debug(f"Current time {now()} is after 3end of last class at {latest}.", urgent=True)
 	if all(found):
-		debug(f"No classes are enabled.")
+		debug(f"No classes are enabled.", urgent=True)
 	
 	while now() < latest and not all(found):
 		try:
