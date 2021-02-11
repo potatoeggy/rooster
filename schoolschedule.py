@@ -69,7 +69,7 @@ class DiscordCommunicator:
 		if string != "":
 			debug(f"{now()}: {string}", urgent=True)
 		payload = { "content": string }
-		#requests.post(self.discord_url, data=payload)
+		requests.post(self.discord_url, data=payload)
 	
 	def send_help(self, string="", abort=True):
 		self.send_message(string)
