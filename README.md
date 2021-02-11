@@ -1,4 +1,4 @@
-# meet-discord
+# rooster
 
 Send a Discord webhook when a YRDSB Google Meet is detected to be open
 
