@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import datetime
 import json
+import os
 import sys
 import time
 from collections import namedtuple
@@ -126,7 +127,6 @@ def login_google(gmail_address, yrdsb_password, driver):
 
 def init():
 	global VERBOSE
-	debug("Initialising program...")
 	# check command line arguments, config file, fallback
 	def check_config(key, fallback):
 		# TODO: consider environment variables
@@ -144,9 +144,9 @@ def init():
 		return result
 	
 	# read from config file
-	config_file = "config.json"
+	debug("Reading configuration...", urgent=True)
+	config_file = os.path.join(sys.path[0], "config.json")
 	try:
-		debug("Reading configuration...")
 		config_file = sys.argv[sys.argv.index("--config") + 1]
 	except ValueError:
 		pass # user did not specify custom conf location
@@ -170,7 +170,7 @@ def init():
 	# TODO: consider removing two paths/logs since you can only use one anyway
 	render_backend = check_config("render_backend", "chromedriver") # one of "chromedriver" or "geckodriver"
 	driver_path = check_config(f"{render_backend}_path", f"/usr/bin/{render_backend}")
-	driver_log = check_config(f"{render_backend}_log", f"./{render_backend}.log")
+	driver_log = check_config(f"{render_backend}_log", f"{render_backend}.log")
 	class_data = obj["class_data"]
 
 	if VERBOSE:
