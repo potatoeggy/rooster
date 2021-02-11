@@ -9,9 +9,10 @@ import json
 import sys
 
 def show_help():
-	print("""
-	Discord-Meet Pinger - pings a role when a meeting opens
-	""")
+	print(
+"""
+Discord-Meet Pinger - pings a role when a meeting opens
+""")
 	exit()
 
 if "--help" in sys.argv or "-h" in sys.argv:
