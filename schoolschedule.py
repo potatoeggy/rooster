@@ -6,11 +6,11 @@ import datetime
 import time
 import json
 
-# TODO: cohort rotation system support — preprocessing?
-
 # load config from file
 with open("config.json", "r") as file:
 	data = file.read()
+
+# TODO: allow some json fields to be empty and initialise defaults
 
 obj = json.loads(data)
 GMAIL_ADDRESS = obj["GMAIL_ADDRESS"]
@@ -23,15 +23,17 @@ CHROMEDRIVER_LOG = obj["CHROMEDRIVER_LOG"]
 RENDER_BACKEND = obj["RENDER_BACKEND"]
 DISCORD_URL = obj["DISCORD_URL"]
 CLASS_DATA = obj["CLASS_DATA"]
-VERBOSE=obj["verbose"]
+verbose=obj["verbose"]
 admin_user_id=obj["admin_user_id"]
+hammer_mode=obj["hammer_mode"]
+hammer_delay=obj["hammer_delay"]
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
 	send_help("Exiting because no classes found.")
 
 def debug(string):
-	if VERBOSE:
+	if verbose:
 		print("DEBUG:", string)
 
 def send_help(string="", abort=True):
@@ -39,6 +41,38 @@ def send_help(string="", abort=True):
 	payload = { "content": f"<@!{admin_user_id}>, manual intervention required! Help help things are on fire help help " + string }
 	requests.post(DISCORD_URL, data=payload)
 	if abort: exit()
+
+def ping_meet(c, driver):
+	driver.get(c.link)
+	html = driver.page_source
+	if not "meet.google.com" in c.link:
+		print("Zoom detection not available for {0}, sending Discord hook at first opportunity".format(c.name))
+		c.send_discord_message(DISCORD_URL)
+		found[i] = True
+	elif "Ready to join?" in html:
+		# meet is open
+		c.send_discord_message(DISCORD_URL)
+		debug("class {0} message sent".format(c.name))
+		found[i] = True
+	elif "Not your computer?" in html:
+		# not logged in even when bot is supposed to be logged in
+		send_help("ERROR: Bot is not logged in.")
+	elif "Check your meeting code" in html or "You can't create a meeting yourself" in html:
+		# meet is not open, continue waiting
+		pass
+	elif "Your meeting code has expired" in html:
+		# right after class or link needs to be updated, or class was dismissed early
+		send_help(f"WARNING: Link needs to be updated for {c.name}", abort=False)
+		found[i] = True
+	elif "Invalid video call name" in html:
+		send_help(f"ERROR: Invalid link for {c.name}", abort=False)
+		found[i] = True
+	elif "Getting ready" in html:
+		print("WARNING: Delay is too slow, Google is still getting ready")
+	elif "You can't join this video call" in html:
+		send_help(f"ERROR: Google bot detection triggered or not authenticated with {c.name}")
+	else:
+		send_help(f"ERROR: Something unexpected happened with {c.name}")
 
 class Class:
 	def __init__(self, name, teacher, start_time, end_time, period, discord_role, link, enabled):
@@ -108,59 +142,32 @@ def now():
 
 # only run while in school hours
 while now() < latest and not all(found):
-	try:
-		# sleep until five minutes before next class
-		earliest_valid_class = sorted_classes[0]
-		for i, c in enumerate(sorted_classes):
-			if not found[i]:
-				earliest_valid_class = c
-				break
-		debug("sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
-		time.sleep((earliest_valid_class.start_time-now()).total_seconds())
-	except ValueError:
-		# expected as part of regular loop (oversleep might happen but is rare)
-		pass
+	if not hammer_mode: # use the times given for each class
+		try:
+			# sleep until five minutes before next class
+			earliest_valid_class = sorted_classes[0]
+			for i, c in enumerate(sorted_classes):
+				if not found[i]:
+					earliest_valid_class = c
+					break
+			debug("sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
+			time.sleep((earliest_valid_class.start_time-now()).total_seconds())
+		except ValueError:
+			# expected as part of regular loop (oversleep might happen but is rare)
+			pass
 	
 	for i, c in enumerate(sorted_classes):
 		if found[i] or not enabled[i]: continue
-		if c.end_time <= now(): # link not found for too long
+		if hammer_mode:
+			ping_meet(c, driver)
+		elif c.end_time <= now(): # link not found for too long
 			debug("Skipped class {0} as it is past its end time".format(c.name))
 			found[i] = True
 			continue
 		elif c.start_time > now(): # not start time yet, we can exit because the array should be sorted
 			break
 		elif c.start_time <= now(): # between end and start times
-			driver.get(c.link)
-			html = driver.page_source
-			if not "meet.google.com" in c.link:
-				print("Zoom detection not available for {0}, sending Discord hook at first opportunity".format(c.name))
-				c.send_discord_message(DISCORD_URL)
-				found[i] = True
-				continue
-			elif "Ready to join?" in html:
-				# meet is open
-				c.send_discord_message(DISCORD_URL)
-				debug("class {0} message sent".format(c.name))
-				found[i] = True
-			elif "Not your computer?" in html:
-				# not logged in even when bot is supposed to be logged in
-				send_help("ERROR: Bot is not logged in.")
-			elif "Check your meeting code" in html or "You can't create a meeting yourself" in html:
-				# meet is not open, continue waiting
-				pass
-			elif "Your meeting code has expired" in html:
-				# right after class or link needs to be updated, or class was dismissed early
-				send_help(f"WARNING: Link needs to be updated for {c.name}", abort=False)
-				found[i] = True
-			elif "Invalid video call name" in html:
-				send_help(f"ERROR: Invalid link for {c.name}", abort=False)
-				found[i] = True
-			elif "Getting ready" in html:
-				print("WARNING: Delay is too slow, Google is still getting ready")
-			elif "You can't join this video call" in html:
-				send_help(f"ERROR: Google bot detection triggered or not authenticated with {c.name}")
-			else:
-				send_help(f"ERROR: Something unexpected happened with {c.name}")
+			ping_meet(c, driver)
 	
-	time.sleep(5) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
+	time.sleep(5 if not hammer_mode else hammer_delay) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
 driver.quit()
