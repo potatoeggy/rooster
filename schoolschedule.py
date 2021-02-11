@@ -81,12 +81,11 @@ def ping_meet(c, driver):
 		send_help(f"ERROR: Something unexpected happened with {c.name}")
 
 class Class:
-	def __init__(self, name, teacher, start_time, end_time, period, discord_role, link, enabled):
+	def __init__(self, name, teacher, start_time, end_time, discord_role, link, enabled):
 		self.name = name
 		self.teacher = teacher
 		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
 		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
-		self.period = period
 		self.discord_role = discord_role
 		self.link = link
 		self.enabled = enabled
@@ -101,7 +100,7 @@ classes = []
 
 # change json to object
 for c in CLASS_DATA:
-	classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["period"], c["role"], c["link"], c["enabled"]))
+	classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["role"], c["link"], c["enabled"]))
 sorted_classes = sorted(classes, key=lambda c: c.start_time) # sort by time started
 
 # initialise web engine
