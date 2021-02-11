@@ -24,15 +24,21 @@ RENDER_BACKEND = obj["RENDER_BACKEND"]
 DISCORD_URL = obj["DISCORD_URL"]
 CLASS_DATA = obj["CLASS_DATA"]
 VERBOSE=obj["verbose"]
+ADMIN_USER_ID=obj["admin_user_id"]
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
-	print("Exiting because no classes found.")
-	exit()
+	send_help("Exiting because no classes found.")
 
 def debug(string):
 	if VERBOSE:
 		print("DEBUG:", string)
+
+def send_help(string="", abort=True):
+	if string != "": print(string)
+	payload = { "content": f"<@!{admin_user_id}>, manual intervention required! Help help things are on fire help help " + string }
+	requests.post(DISCORD_URL, data=payload)
+	if abort: exit()
 
 class Class:
 	def __init__(self, name, teacher, start_time, end_time, period, discord_role, link, enabled):
@@ -72,8 +78,7 @@ elif RENDER_BACKEND == "chromedriver":
 		options.add_argument("user-agent=\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36\"")
 	driver = webdriver.Chrome(options=options, executable_path=CHROMEDRIVER_PATH, service_log_path=CHROMEDRIVER_LOG)
 else:
-	print("ERROR: No render backend found")
-	exit()
+	send_help("ERROR: No render backend found")
 
 # login to google to use lookup links
 driver.get("https://accounts.google.com/ServiceLogin?continue=https://google.com")
@@ -139,24 +144,23 @@ while now() < latest and not all(found):
 				found[i] = True
 			elif "Not your computer?" in html:
 				# not logged in even when bot is supposed to be logged in
-				print("ERROR: Bot is not logged in.")
-				exit(1)
+				send_help("ERROR: Bot is not logged in.")
 			elif "Check your meeting code" in html or "You can't create a meeting yourself" in html:
 				# meet is not open, continue waiting
 				pass
 			elif "Your meeting code has expired" in html:
 				# right after class or link needs to be updated, or class was dismissed early
-				print("WARNING: Class dismissed early or link needs to be updated for", c.name)
+				send_help(f"WARNING: Link needs to be updated for {c.name}", abort=False)
 				found[i] = True
 			elif "Invalid video call name" in html:
-				print("ERROR: Invalid link for", c.name)
+				send_help(f"ERROR: Invalid link for {c.name}", abort=False)
 				found[i] = True
 			elif "Getting ready" in html:
 				print("WARNING: Delay is too slow, Google is still getting ready")
 			elif "You can't join this video call" in html:
-				print("ERROR: Google bot detection triggered or not authenticated with", c.name)
+				send_help(f"ERROR: Google bot detection triggered or not authenticated with {c.name}")
 			else:
-				print("ERROR: Something unexpected happened with", c.name)
+				send_help(f"ERROR: Something unexpected happened with {c.name}")
 	
 	time.sleep(5) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
 driver.quit()
