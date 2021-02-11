@@ -155,6 +155,9 @@ def init():
 	driver_log = check_config(f"{render_backend}_log", f"./{render_backend}.log")
 	class_data = obj["class_data"]
 
+	if VERBOSE:
+		debug("Running in debug/verbose mode.")
+
 	discord = DiscordCommunicator(discord_url, admin_user_id)
 	debug("Processing class data...")
 	sorted_classes = process_class_data(class_data, discord)
