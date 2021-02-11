@@ -1,11 +1,12 @@
 #!/usr/bin/python
-from selenium import webdriver
-from collections import namedtuple
-import requests
 import datetime
-import time
 import json
 import sys
+import time
+from collections import namedtuple
+
+import requests
+from selenium import webdriver
 
 # TODO: remove all globals
 VERBOSE = True # true for now because some debug statements are called prior to VERBOSE being set
