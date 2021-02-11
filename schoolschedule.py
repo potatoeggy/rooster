@@ -24,7 +24,7 @@ RENDER_BACKEND = obj["RENDER_BACKEND"]
 DISCORD_URL = obj["DISCORD_URL"]
 CLASS_DATA = obj["CLASS_DATA"]
 VERBOSE=obj["verbose"]
-ADMIN_USER_ID=obj["admin_user_id"]
+admin_user_id=obj["admin_user_id"]
 
 # if no classes there is nothing to do
 if len(CLASS_DATA) == 0:
