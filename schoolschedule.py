@@ -65,6 +65,11 @@ class Period:
 		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
 		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
 
+class Period:
+	def __init__(self, start_time, end_time):
+		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
+		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
+
 class DiscordCommunicator:
 	def __init__(self, discord_url, admin_user_id):
 		self.discord_url = discord_url
@@ -74,7 +79,8 @@ class DiscordCommunicator:
 		if string != "":
 			debug(f"{now()}: {string}", urgent=True)
 		payload = { "content": string }
-		requests.post(self.discord_url, data=payload)
+		#requests.post(self.discord_url, data=payload)
+		print(payload) # TODO: DEBUG
 	
 	def send_help(self, string="", abort=True):
 		self.send_message(f"<@!{self.admin_user_id}>, manual intervention required! " + string)
@@ -266,7 +272,6 @@ if __name__ == "__main__":
 	earliest = sorted_periods[0].start_time
 	latest = sorted_periods[-1].end_time
 	found = [[not c.enabled for c in a] for a in sorted_classes]
-	print(found)
 
 	debug(f"Ready.", urgent=True)
 
