@@ -4,6 +4,8 @@ Send a Discord webhook when a YRDSB Google Meet is detected to be open
 
 ## Setup guide
 
+Ensure that either [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/) and [geckodriver](https://github.com/mozilla/geckodriver) or [Google Chrome](https://www.google.com/chrome/) and a `csc`-patched [chromedriver](https://chromedriver.chromium.org/) are installed.
+
 Install dependencies:
 
 ```
