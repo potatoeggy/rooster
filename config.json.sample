@@ -10,6 +10,7 @@
 "discord_url": "https://discord.com/api/webhooks/XXXXXXXXXXXXX",
 "verbose": true,
 "admin_user_id": 1234567890,
+"run_on_weekends": false,
 "class_data": [
 	{
 		"name": "Mathematics",

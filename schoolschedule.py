@@ -32,6 +32,7 @@ Usage:	python schoolschedule.py [options...]
 General options
   --config <path>			Use configuration file at <path>.
   --verbose				Run with extended output (debug mode).
+  --run-on-weekends			Do not exit when weekend is detected.
   --help, -h				Print this help screen.
 
 Browser options
@@ -171,10 +172,13 @@ def init():
 	render_backend = check_config("render_backend", "chromedriver") # one of "chromedriver" or "geckodriver"
 	driver_path = check_config(f"{render_backend}_path", f"/usr/bin/{render_backend}")
 	driver_log = check_config(f"{render_backend}_log", f"{render_backend}.log")
+	run_on_weekends = check_config("run_on_weekends", False)
 	class_data = obj["class_data"]
 
 	if VERBOSE:
 		debug("Running in debug/verbose mode.")
+	if (not run_on_weekends) and now().weekday() >= 5:
+		debug("Current day is a weekend, exiting.", urgent=True)
 
 	discord = DiscordCommunicator(discord_url, admin_user_id)
 	debug("Processing class data...")

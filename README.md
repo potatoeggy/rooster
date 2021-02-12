@@ -27,6 +27,7 @@ Usage:	python schoolschedule.py [options...]
 General options
   --config <path>			Use configuration file at <path>.
   --verbose				Run with extended output (debug mode).
+  --run-on-weekends			Do not exit when weekend is detected.
   --help, -h				Print this help screen.
 
 Browser options
