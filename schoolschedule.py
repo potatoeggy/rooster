@@ -205,7 +205,7 @@ def ping_meet(c, driver, discord):
 	elif "Not your computer?" in html:
 		# not logged in even when bot is supposed to be logged in
 		discord.send_help("ERROR: Bot is not logged in.")
-	elif "Check your meeting code" in html or "You can't create a meeting yourself" in html:
+	elif "Check your meeting code" in html or "You can't create a meeting yourself" in html or "meeting hasn't started" in html:
 		# meet is not open, continue waiting
 		pass
 	elif "Your meeting code has expired" in html:
