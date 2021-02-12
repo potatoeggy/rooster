@@ -73,7 +73,7 @@ class DiscordCommunicator:
 		requests.post(self.discord_url, data=payload)
 	
 	def send_help(self, string="", abort=True):
-		self.send_message(string)
+		self.send_message(f"<@!{self.admin_user_id}>, manual intervention required! " + string)
 		if abort:
 			exit()
 
