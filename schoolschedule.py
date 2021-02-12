@@ -197,7 +197,7 @@ def ping_meet(c, driver, discord):
 		debug(f"Zoom detection not available for {c.name}, sending Discord hook at first opportunity")
 		discord.send_message(c.get_discord_message())
 		found[i] = True
-	elif "Ready to join?" in html:
+	elif "Ready to join?" in html or "Ask to join" in html:
 		# meet is open
 		discord.send_message(c.get_discord_message())
 		debug(f"Class {c.name} message sent")
