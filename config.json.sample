@@ -11,8 +11,8 @@
 "verbose": true,
 "admin_user_id": 1234567890,
 "run_on_weekends": false,
-"use_period_order": false,
-"period_order": [2, 1],
+"use_class_order": false,
+"class_order": [2, 1],
 "period_data": [
 	{
 		"start_time": "08:00",

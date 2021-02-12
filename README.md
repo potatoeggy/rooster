@@ -36,12 +36,17 @@ Browser options
   --driver-path <path>			Use <path> as the path to the driver executable.
   --driver-log <path>			Use <path> as the path to the driver log file.
 
+Special options
+  --use-class-order			Override the order of classes based on period.
+
 Secrets options
   --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
   --yrdsb-password <password>		Use <password> as the password for authentication with YRDSB for Meet lookups.
   --discord-url <url>			Use <url> as the URL to send Discord webhooks to.
   --admin-user-id <id>			Use <id> as the Discord user ID to ping in case of emergencies.
 ```
+
+### Class configuration
 
 Class data is stored in the `config.json` configuration file with each class requiring the following fields:
 
@@ -53,17 +58,9 @@ The name of the class used in debug messages and sent to Discord.
 
 The name of the teacher sent to Discord.
 
-#### start_time: string
-
-Must be in 24-hour time, in the format `HH:mm`. The program starts checking if the meeting is open five minutes prior to this time.
-
-#### end_time: string
-
-Must be in 24-hour time, in the format `HH:mm`. The program stops checking if the meeting is open after this time.
-
 #### period: integer
 
-A currently unused variable, this field can be left empty.
+The period number of the class, indicating which time slot it normally occupies. Can be overriden by the `use_class_order` and `class_order` parameters.
 
 #### role: integer/string
 
@@ -76,3 +73,13 @@ The link that the program will scrape to check if a meeting is open. If the link
 #### enabled: boolean
 
 This option controls whether this class will be searched for.
+
+### Period configuration
+
+#### start_time: string
+
+Must be in 24-hour time, in the format `HH:mm`. The program starts checking if meetings are open five minutes prior to this time.
+
+#### end_time: string
+
+Must be in 24-hour time, in the format `HH:mm`. The program stops checking if meetings are open after this time.

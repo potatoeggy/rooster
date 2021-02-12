@@ -10,6 +10,7 @@ import requests
 from selenium import webdriver
 
 # TODO: remove all globals
+# TODO: add a dry run that doesn't ping discord
 VERBOSE = True # true for now because some debug statements are called prior to VERBOSE being set
 
 def debug(string, urgent=False):
@@ -40,6 +41,9 @@ Browser options
   --render-backend <driver>		Use <driver> as the browser backend (either "geckodriver" or "chromedriver").
   --driver-path <path>			Use <path> as the path to the driver executable.
   --driver-log <path>			Use <path> as the path to the driver log file.
+
+Special options
+  --use-class-order			Override the order of classes based on period.
 
 Secrets options
   --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
@@ -79,15 +83,14 @@ class DiscordCommunicator:
 		if string != "":
 			debug(f"{now()}: {string}", urgent=True)
 		payload = { "content": string }
-		#requests.post(self.discord_url, data=payload)
-		print(payload) # TODO: DEBUG
+		requests.post(self.discord_url, data=payload)
 	
 	def send_help(self, string="", abort=True):
 		self.send_message(f"<@!{self.admin_user_id}>, manual intervention required! " + string)
 		if abort:
 			exit()
 
-def process_class_data(class_data, discord, period_order):
+def process_class_data(class_data, discord, class_order):
 	classes = []
 
 	# if no classes there is nothing to do
@@ -99,11 +102,11 @@ def process_class_data(class_data, discord, period_order):
 		classes.append(Class(c["name"], c["teacher"], c["period"], c["role"], c["link"], c["enabled"])) # TODO: refactor to just plug in the whole dict to the constructor
 	classes.sort(key=lambda c: c.period)
 
-	if period_order is None:
-		period_order = list(dict.fromkeys([c.period for c in classes])) # TODO: add python 3.6+ as dependency for ordered dict
+	if class_order is None:
+		class_order = sorted(list(set([c.period for c in classes])))
 	# takes sorted by period classes list and splits it into smaller lists of the same period 
-	sorted_classes = [[] for i in period_order]
-	for i, a in enumerate(period_order):
+	sorted_classes = [[] for i in class_order]
+	for i, a in enumerate(class_order):
 		for c in classes:
 			if c.period == a:
 				sorted_classes[i].append(c)
@@ -201,7 +204,7 @@ def init():
 	yrdsb_password = obj["yrdsb_password"] # password in plaintext :P
 	discord_url = obj["discord_url"] # discord webhook url
 	admin_user_id = obj["admin_user_id"] # discord user id to ping in emergencies
-	period_data = obj["period_data"] # TODO: call it class_order since that makes more sense
+	period_data = obj["period_data"]
 	class_data = obj["class_data"]
 
 	# optional fields
@@ -212,8 +215,8 @@ def init():
 	driver_path = check_config(f"{render_backend}_path", f"/usr/bin/{render_backend}")
 	driver_log = check_config(f"{render_backend}_log", f"{render_backend}.log")
 	run_on_weekends = check_config("run_on_weekends", False)
-	use_period_order = check_config("use_period_order", False)
-	period_order = check_config("period_order", [])
+	use_class_order = check_config("use_class_order", False)
+	class_order = check_config("class_order", [])
 
 	if VERBOSE:
 		debug("Running in debug/verbose mode.")
@@ -222,7 +225,7 @@ def init():
 
 	discord = DiscordCommunicator(discord_url, admin_user_id)
 	debug("Processing class data...")
-	sorted_classes = process_class_data(class_data, discord, period_order if use_period_order else None)
+	sorted_classes = process_class_data(class_data, discord, class_order if use_class_order else None)
 	debug("Processing period data...")
 	sorted_periods = process_period_data(period_data, discord)
 	debug("Initialising browser...")
