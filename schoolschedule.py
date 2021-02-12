@@ -53,26 +53,23 @@ Secrets options
 """)
 	exit()
 class Class:
-	def __init__(self, name, teacher, period, discord_role, link, enabled):
-		self.name = name
-		self.teacher = teacher
-		self.period = period
-		self.discord_role = discord_role
-		self.link = link
-		self.enabled = enabled
+	def __init__(self, jsondict):
+		# jsondict must be dict with below vars as keys - period and enabled are int and boolean while the rest are strings
+		self.name = jsondict["name"]
+		self.teacher = jsondict["teacher"]
+		self.period = jsondict["period"]
+		self.discord_role = jsondict["discord_role"]
+		self.link = jsondict["link"]
+		self.enabled = jsondict["enabled"]
 	
 	def get_discord_message(self):
 		return f"<@&{self.discord_role}>, **{self.name}** with {self.teacher} is now **open** at <{self.link}>!"
 
 class Period:
-	def __init__(self, start_time, end_time):
-		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
-		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
-
-class Period:
-	def __init__(self, start_time, end_time):
-		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
-		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
+	def __init__(self, jsondict):
+		# jsondict must be dict with "start_time" and "end_time" as keys with values of "HH:mm"
+		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["start_time"].split(":"))))) - datetime.timedelta(minutes=5)
+		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["end_time"].split(":")))))
 
 class DiscordCommunicator:
 	def __init__(self, discord_url, admin_user_id):
@@ -99,7 +96,7 @@ def process_class_data(class_data, discord, class_order):
 
 	# change json to object
 	for c in class_data:
-		classes.append(Class(c["name"], c["teacher"], c["period"], c["role"], c["link"], c["enabled"])) # TODO: refactor to just plug in the whole dict to the constructor
+		classes.append(Class(c))
 	classes.sort(key=lambda c: c.period)
 
 	if class_order is None:
@@ -123,7 +120,7 @@ def process_period_data(period_data, discord):
 	
 	# change json to object
 	for p in period_data:
-		periods.append(Period(p["start_time"], p["end_time"]))
+		periods.append(Period(p))
 
 	sorted_periods = sorted(periods, key=lambda p: p.start_time)
 	debug(f"Found {len(sorted_periods)} period(s).")
