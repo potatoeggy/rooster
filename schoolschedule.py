@@ -136,8 +136,8 @@ def init():
 		try:
 			if type(fallback) is not bool:
 				result = type(fallback)(sys.argv[sys.argv.index(args_key) + 1])
-			else:
-				result = args_key in sys.argv # only something like --verbose is needed instead of --verbose True
+			elif args_key in sys.argv:
+				result = True # only something like --verbose is needed instead of --verbose True
 		except ValueError:
 			pass # user did not specify conf in command line
 		except IndexError:
