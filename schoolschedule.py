@@ -214,7 +214,7 @@ def ping_meet(c, driver, discord):
 	elif "You can't join this video call" in html:
 		discord.send_help(f"ERROR: Google bot detection triggered or not authenticated with {c.name}")
 	else:
-		discord.send_help(f"ERROR: Something unexpected happened with {c.name}")
+		discord.send_help(f"ERROR: Something unexpected happened with {c.name}", abort=False)
 
 # main event
 if __name__ == "__main__":
