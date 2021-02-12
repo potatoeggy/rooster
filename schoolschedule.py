@@ -58,7 +58,7 @@ class Class:
 		self.enabled = enabled
 	
 	def get_discord_message(self):
-		return f"<@&{self.discord_role}>, **{self.name}** with {self.teacher} is now **open** at <{self.link}> !"
+		return f"<@&{self.discord_role}>, **{self.name}** with {self.teacher} is now **open** at <{self.link}>!"
 
 class Period:
 	def __init__(self, start_time, end_time):
@@ -74,8 +74,7 @@ class DiscordCommunicator:
 		if string != "":
 			debug(f"{now()}: {string}", urgent=True)
 		payload = { "content": string }
-		#requests.post(self.discord_url, data=payload)
-		print(payload) # TODO: DEBUG
+		requests.post(self.discord_url, data=payload)
 	
 	def send_help(self, string="", abort=True):
 		self.send_message(f"<@!{self.admin_user_id}>, manual intervention required! " + string)
@@ -97,11 +96,11 @@ def process_class_data(class_data, discord, period_order):
 	if period_order is None:
 		period_order = list(dict.fromkeys([c.period for c in classes])) # TODO: add python 3.6+ as dependency for ordered dict
 	# takes sorted by period classes list and splits it into smaller lists of the same period 
-	# TODO: get rid of the below bullshit
-	sorted_classes = [[c for c in classes[[x.period for x in classes].index(i) : None if i == period_order[-1] else [x.period for x in classes].index(period_order[k+1])]] for k, i in enumerate(period_order)] # designed to be the most spaghetti out of all the spaghetti code i've made
-	for i in sorted_classes:
-		for j in i:
-			print(j.period, sep=", ")
+	sorted_classes = [[] for i in period_order]
+	for i, a in enumerate(period_order):
+		for c in classes:
+			if c.period == a:
+				sorted_classes[i].append(c)
 
 	debug(f"Found {len(classes)} class(es).")
 	return sorted_classes
@@ -267,6 +266,7 @@ if __name__ == "__main__":
 	earliest = sorted_periods[0].start_time
 	latest = sorted_periods[-1].end_time
 	found = [[not c.enabled for c in a] for a in sorted_classes]
+	print(found)
 
 	debug(f"Ready.", urgent=True)
 
@@ -306,7 +306,9 @@ if __name__ == "__main__":
 				found[current_period][i] = True
 			elif sorted_periods[current_period].start_time <= now(): # between end and start times
 				ping_meet(c, driver, discord)
+				found[current_period][i] = True
 		
-		time.sleep(10) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
+		time.sleep(5)
+
 	debug("Exiting...")
 	driver.quit()
