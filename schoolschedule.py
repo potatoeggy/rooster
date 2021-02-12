@@ -10,6 +10,7 @@ import requests
 from selenium import webdriver
 
 # TODO: remove all globals
+# TODO: add a dry run that doesn't ping discord
 VERBOSE = True # true for now because some debug statements are called prior to VERBOSE being set
 
 def debug(string, urgent=False):
@@ -41,6 +42,9 @@ Browser options
   --driver-path <path>			Use <path> as the path to the driver executable.
   --driver-log <path>			Use <path> as the path to the driver log file.
 
+Special options
+  --use-class-order			Override the order of classes based on period.
+
 Secrets options
   --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
   --yrdsb-password <password>		Use <password> as the password for authentication with YRDSB for Meet lookups.
@@ -49,17 +53,23 @@ Secrets options
 """)
 	exit()
 class Class:
-	def __init__(self, name, teacher, start_time, end_time, discord_role, link, enabled):
-		self.name = name
-		self.teacher = teacher
-		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, start_time.split(":"))))) - datetime.timedelta(minutes=5)
-		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, end_time.split(":")))))
-		self.discord_role = discord_role
-		self.link = link
-		self.enabled = enabled
+	def __init__(self, jsondict):
+		# jsondict must be dict with below vars as keys - period and enabled are int and boolean while the rest are strings
+		self.name = jsondict["name"]
+		self.teacher = jsondict["teacher"]
+		self.period = jsondict["period"]
+		self.discord_role = jsondict["discord_role"]
+		self.link = jsondict["link"]
+		self.enabled = jsondict["enabled"]
 	
 	def get_discord_message(self):
-		return f"<@&{self.discord_role}>, **{self.name}** with {self.teacher} is now **open** at <{self.link}> !"
+		return f"<@&{self.discord_role}>, **{self.name}** with {self.teacher} is now **open** at <{self.link}>!"
+
+class Period:
+	def __init__(self, jsondict):
+		# jsondict must be dict with "start_time" and "end_time" as keys with values of "HH:mm"
+		self.start_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["start_time"].split(":"))))) - datetime.timedelta(minutes=5)
+		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["end_time"].split(":")))))
 
 class DiscordCommunicator:
 	def __init__(self, discord_url, admin_user_id):
@@ -77,7 +87,7 @@ class DiscordCommunicator:
 		if abort:
 			exit()
 
-def process_class_data(class_data, discord):
+def process_class_data(class_data, discord, class_order):
 	classes = []
 
 	# if no classes there is nothing to do
@@ -86,14 +96,41 @@ def process_class_data(class_data, discord):
 
 	# change json to object
 	for c in class_data:
-		classes.append(Class(c["name"], c["teacher"], c["start_time"], c["end_time"], c["role"], c["link"], c["enabled"]))
-	sorted_classes = sorted(classes, key=lambda c: c.start_time) # sort by time started
-	debug(f"Found {len(sorted_classes)} classes.")
+		classes.append(Class(c))
+	classes.sort(key=lambda c: c.period)
+
+	if class_order is None:
+		class_order = sorted(list(set([c.period for c in classes])))
+	# takes sorted by period classes list and splits it into smaller lists of the same period 
+	sorted_classes = [[] for i in class_order]
+	for i, a in enumerate(class_order):
+		for c in classes:
+			if c.period == a:
+				sorted_classes[i].append(c)
+
+	debug(f"Found {len(classes)} class(es).")
 	return sorted_classes
+
+def process_period_data(period_data, discord):
+	periods = []
+
+	# if no periods there is nothing to do
+	if len(period_data) == 0:
+		discord.send_help("Exiting because no periods found.")
+	
+	# change json to object
+	for p in period_data:
+		periods.append(Period(p))
+
+	sorted_periods = sorted(periods, key=lambda p: p.start_time)
+	debug(f"Found {len(sorted_periods)} period(s).")
+	return sorted_periods
 
 def init_driver(render_backend, worker_visible, driver_path, driver_log, discord):
 	# initialise web engine
 	if render_backend == "geckodriver": # note firefox is borked in headless
+		if not worker_visible:
+			debug("Firefox currently does not support Google Meet in headless mode. Expect crashes.", urgent=True)
 		options = webdriver.firefox.options.Options()
 		options.headless = not worker_visible
 		profile = webdriver.FirefoxProfile()
@@ -164,6 +201,8 @@ def init():
 	yrdsb_password = obj["yrdsb_password"] # password in plaintext :P
 	discord_url = obj["discord_url"] # discord webhook url
 	admin_user_id = obj["admin_user_id"] # discord user id to ping in emergencies
+	period_data = obj["period_data"]
+	class_data = obj["class_data"]
 
 	# optional fields
 	VERBOSE = check_config("verbose", False) # if debug statements are printed
@@ -173,7 +212,8 @@ def init():
 	driver_path = check_config(f"{render_backend}_path", f"/usr/bin/{render_backend}")
 	driver_log = check_config(f"{render_backend}_log", f"{render_backend}.log")
 	run_on_weekends = check_config("run_on_weekends", False)
-	class_data = obj["class_data"]
+	use_class_order = check_config("use_class_order", False)
+	class_order = check_config("class_order", [])
 
 	if VERBOSE:
 		debug("Running in debug/verbose mode.")
@@ -182,13 +222,15 @@ def init():
 
 	discord = DiscordCommunicator(discord_url, admin_user_id)
 	debug("Processing class data...")
-	sorted_classes = process_class_data(class_data, discord)
+	sorted_classes = process_class_data(class_data, discord, class_order if use_class_order else None)
+	debug("Processing period data...")
+	sorted_periods = process_period_data(period_data, discord)
 	debug("Initialising browser...")
 	driver = init_driver(render_backend, worker_visible, driver_path, driver_log, discord)
 	debug("Authenticating with Google...")
 	login_google(gmail_address, yrdsb_password, driver)
 	debug("Initialisation complete.")
-	return (sorted_classes, driver, discord)
+	return (sorted_classes, sorted_periods, driver, discord)
 
 def ping_meet(c, driver, discord):
 	driver.get(c.link)
@@ -225,45 +267,53 @@ if __name__ == "__main__":
 	if "--help" in sys.argv or "-h" in sys.argv:
 		show_help()
 
-	sorted_classes, driver, discord = init()
+	sorted_classes, sorted_periods, driver, discord = init()
 	driver.implicitly_wait(15)
-	earliest = sorted_classes[0].start_time
-	latest = sorted_classes[-1].end_time
-	found = [not c.enabled for c in sorted_classes]
+	earliest = sorted_periods[0].start_time
+	latest = sorted_periods[-1].end_time
+	found = [[not c.enabled for c in a] for a in sorted_classes]
 
 	debug(f"Ready.", urgent=True)
 
 	# only run while in school hours
 	if now() > latest:
-		debug(f"Current time {now()} is after 3end of last class at {latest}.", urgent=True)
+		debug(f"Current time {now()} is after end of last period at {latest}.", urgent=True)
 	if all(found):
 		debug(f"No classes are enabled.", urgent=True)
+	if earliest > now():
+		seconds_until_first_period = (earliest-now()).total_seconds()
+		debug(f"Sleeping for {seconds_until_first_period} seconds until first period.")
+		time.sleep(seconds_until_first_period)
 	
-	while now() < latest and not all(found):
-		try:
-			# sleep until five minutes before next class
-			earliest_valid_class = sorted_classes[0]
-			for i, c in enumerate(sorted_classes):
-				if not found[i]:
-					earliest_valid_class = c
-					break
-			debug("sleeping for {0} seconds".format((earliest_valid_class.start_time-now()).total_seconds()))
-			time.sleep((earliest_valid_class.start_time-now()).total_seconds())
-		except ValueError:
-			# expected as part of regular loop (oversleep might happen but is rare)
-			pass
-		
-		for i, c in enumerate(sorted_classes):
-			if found[i] or not c.enabled: continue
-			elif c.end_time <= now(): # link not found for too long
-				debug("Skipped class {0} as it is past its end time".format(c.name))
-				found[i] = True
-				continue
-			elif c.start_time > now(): # not start time yet, we can exit because the array should be sorted
+	current_period = 0
+	while now() < latest:
+		if all(found[current_period]):
+			try:
+				next_period_time = sorted_periods[current_period+1].start_time
+				seconds_until_next_period = (next_period_time-now()).total_seconds()
+				classes_skipped = len(found[current_period])-sum(found[current_period])
+				debug(f"All classes found for current period. Sleeping for {seconds_until_next_period} seconds for next period at {next_period_time}")
+
+				current_period += 1
+				time.sleep(seconds_until_next_period)
+			except ValueError:
+				# expected if a class has been skipped
+				pass
+			except IndexError:
+				# All classes found and this is last period, we can exit now
 				break
-			elif c.start_time <= now(): # between end and start times
-				ping_meet(c, driver, discord)
 		
-		time.sleep(5) # combined with the delay in processing and getting this should add up to about 10 s delay per ping
+		for i, c in enumerate(sorted_classes[current_period]):
+			if found[current_period][i] or not c.enabled:
+				continue
+			elif sorted_periods[current_period].end_time <= now(): # link not found for too long
+				debug("Skipped class {0} as it is past its end time".format(c.name))
+				found[current_period][i] = True
+			elif sorted_periods[current_period].start_time <= now(): # between end and start times
+				ping_meet(c, driver, discord)
+				found[current_period][i] = True
+		
+		time.sleep(5)
+
 	debug("Exiting...")
 	driver.quit()
