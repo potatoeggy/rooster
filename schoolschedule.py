@@ -278,7 +278,7 @@ if __name__ == "__main__":
 	# only run while in school hours
 	if now() > latest:
 		debug(f"Current time {now()} is after end of last period at {latest}.", urgent=True)
-	if all(found):
+	if all(all(a) for a in found):
 		debug(f"No classes are enabled.", urgent=True)
 	if earliest > now():
 		seconds_until_first_period = (earliest-now()).total_seconds()
