@@ -58,7 +58,7 @@ class Class:
 		self.name = jsondict["name"]
 		self.teacher = jsondict["teacher"]
 		self.period = jsondict["period"]
-		self.discord_role = jsondict["discord_role"]
+		self.discord_role = jsondict["role"]
 		self.link = jsondict["link"]
 		self.enabled = jsondict["enabled"]
 	
