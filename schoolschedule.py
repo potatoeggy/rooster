@@ -243,6 +243,7 @@ def ping_meet(c, driver, discord):
 		# meet is open
 		discord.send_message(c.get_discord_message())
 		debug(f"Class {c.name} message sent")
+		return True
 	elif "Not your computer?" in html:
 		# not logged in even when bot is supposed to be logged in
 		discord.send_help("ERROR: Bot is not logged in.")
