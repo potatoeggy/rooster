@@ -238,12 +238,11 @@ def ping_meet(c, driver, discord):
 	if not "meet.google.com" in c.link:
 		debug(f"Zoom detection not available for {c.name}, sending Discord hook at first opportunity")
 		discord.send_message(c.get_discord_message())
-		found[i] = True
+		return True
 	elif "Ready to join?" in html or "Ask to join" in html:
 		# meet is open
 		discord.send_message(c.get_discord_message())
 		debug(f"Class {c.name} message sent")
-		found[i] = True
 	elif "Not your computer?" in html:
 		# not logged in even when bot is supposed to be logged in
 		discord.send_help("ERROR: Bot is not logged in.")
@@ -261,6 +260,7 @@ def ping_meet(c, driver, discord):
 		discord.send_help(f"ERROR: Google bot detection triggered or not authenticated with {c.name}")
 	else:
 		discord.send_help(f"ERROR: Something unexpected happened with {c.name}", abort=False)
+	return False
 
 # main event
 if __name__ == "__main__":
@@ -310,8 +310,7 @@ if __name__ == "__main__":
 				debug("Skipped class {0} as it is past its end time".format(c.name))
 				found[current_period][i] = True
 			elif sorted_periods[current_period].start_time <= now(): # between end and start times
-				ping_meet(c, driver, discord)
-				found[current_period][i] = True
+				found[current_period][i] = ping_meet(c, driver, discord)
 		
 		time.sleep(5)
 
