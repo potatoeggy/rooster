@@ -214,11 +214,17 @@ def init():
 	run_on_weekends = check_config("run_on_weekends", False)
 	use_class_order = check_config("use_class_order", False)
 	class_order = check_config("class_order", [])
+	override_days = check_config("override_days", [])
+	override_period_data = check_config("override_period_data", [])
 
 	if VERBOSE:
 		debug("Running in debug/verbose mode.")
 	if (not run_on_weekends) and now().weekday() >= 5:
 		debug("Current day is a weekend, exiting.", urgent=True)
+	if "{date:%Y-%m-%d}".format(date=now()) in override_days:
+		debug("Current day is in override_days, using override_period_data.")
+		period_data = override_period_data
+		use_class_order = False
 
 	discord = DiscordCommunicator(discord_url, admin_user_id)
 	debug("Processing class data...")
