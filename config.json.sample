@@ -13,6 +13,13 @@
 "run_on_weekends": false,
 "use_class_order": false,
 "class_order": [2, 1],
+"override_days": [],
+"override_period_data": [
+	{
+		"start_time": "08:00",
+		"end_time": "09:00"
+	}
+],
 "period_data": [
 	{
 		"start_time": "08:00",
