@@ -221,6 +221,7 @@ def init():
 		debug("Running in debug/verbose mode.")
 	if (not run_on_weekends) and now().weekday() >= 5:
 		debug("Current day is a weekend, exiting.", urgent=True)
+		exit()
 	if "{date:%Y-%m-%d}".format(date=now()) in override_days:
 		debug("Current day is in override_days, using override_period_data.")
 		period_data = override_period_data
