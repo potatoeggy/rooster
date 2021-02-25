@@ -263,7 +263,7 @@ def ping_meet(c, driver, discord):
 	elif "Invalid video call name" in html:
 		discord.send_help(f"ERROR: Invalid link for {c.name}", abort=False)
 	elif "Getting ready" in html:
-		print("WARNING: Delay is too slow, Google is still getting ready")
+		discord.send_help("WARNING: Delay is too slow, Google is still getting ready")
 	elif "You can't join this video call" in html:
 		discord.send_help(f"ERROR: Google bot detection triggered or not authenticated with {c.name}")
 	else:
