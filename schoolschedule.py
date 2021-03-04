@@ -291,6 +291,7 @@ if __name__ == "__main__":
 	if earliest > now():
 		seconds_until_first_period = (earliest-now()).total_seconds()
 		debug(f"Sleeping for {seconds_until_first_period} seconds until first period.")
+		driver.close()
 		time.sleep(seconds_until_first_period)
 	
 	current_period = 0
