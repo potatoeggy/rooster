@@ -291,8 +291,9 @@ if __name__ == "__main__":
 	if earliest > now():
 		seconds_until_first_period = (earliest-now()).total_seconds()
 		debug(f"Sleeping for {seconds_until_first_period} seconds until first period.")
-		driver.close()
+		driver.quit()
 		time.sleep(seconds_until_first_period)
+		sorted_classes, sorted_periods, driver, discord = init()
 	
 	current_period = 0
 	while now() < latest:
