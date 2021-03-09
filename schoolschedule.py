@@ -240,7 +240,10 @@ def init():
 	return (sorted_classes, sorted_periods, driver, discord)
 
 def ping_meet(c, driver, discord):
-	driver.get(c.link)
+	try:
+		driver.get(c.link)
+	except selenium.common.exceptions.InvalidSessionIdException:
+		discord.send_help("ERROR: Invalid session ID, expect borks.", abort=False)
 	html = driver.page_source
 	if not "meet.google.com" in c.link:
 		debug(f"Zoom detection not available for {c.name}, sending Discord hook at first opportunity")
