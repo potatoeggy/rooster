@@ -7,6 +7,7 @@ import time
 from collections import namedtuple
 
 import requests
+import selenium
 from selenium import webdriver
 
 # TODO: remove all globals
