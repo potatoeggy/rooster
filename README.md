@@ -6,7 +6,7 @@ Send a Discord webhook when a YRDSB Google Meet is detected to be open
 
 Ensure that either [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/) and [geckodriver](https://github.com/mozilla/geckodriver) or [Google Chrome](https://www.google.com/chrome/) and a `csc`-patched [chromedriver](https://chromedriver.chromium.org/) are installed.
 
-**WARNING:** It is critical that a `csc` patched chromedriver is used as otherwise Google will block you. To patch the binary, perform a find and replace of all `csc` strings and replace them with a different three-character string, e.g., `dog`.
+**WARNING:** It is critical that a `csc` patched chromedriver is used as otherwise Google will block you. To patch the binary, perform a find and replace of all `csc_` strings and replace them with a different three-character string, e.g., `dog_`.
 
 Install dependencies:
 
@@ -37,9 +37,6 @@ Browser options
   --render-backend <driver>		Use <driver> as the browser backend (either "geckodriver" or "chromedriver").
   --driver-path <path>			Use <path> as the path to the driver executable.
   --driver-log <path>			Use <path> as the path to the driver log file.
-
-Special options
-  --use-class-order			Override the order of classes based on period.
 
 Secrets options
   --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
