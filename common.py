@@ -225,6 +225,8 @@ class driver:
 			com.send_help(f"Google bot detection triggered or not authenticated with {c.name}")
 			return True
 		else:
+			with open("boompie.html") as file:
+				file.write(html)
 			com.send_help(f"Something unexpected happened with {c.name}")
 		return False
 		
