@@ -245,11 +245,11 @@ def init_classes(com: communicator):
 		classes.append(Class(c))
 	classes.sort(key=lambda c: c.period)
 
-	if class_order is None:
-		class_order = sorted(list(set([c.period for c in classes])))
+	if com.class_order == [] or com.class_order is None:
+		com.class_order = sorted(list(set([c.period for c in classes])))
 	# takes sorted by period classes list and splits it into smaller lists of the same period 
-	sorted_classes = [[] for i in class_order]
-	for i, a in enumerate(class_order):
+	sorted_classes = [[] for i in com.class_order]
+	for i, a in enumerate(com.class_order):
 		for c in classes:
 			if c.period == a:
 				sorted_classes[i].append(c)
