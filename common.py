@@ -168,6 +168,7 @@ class driver:
 			exit()
 		
 		self.driver.implicitly_wait(10)
+		self.driver.set_page_load_timeout(5)
 
 		com.debug("Logging into Google...")
 		# login to google to use lookup links

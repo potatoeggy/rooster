@@ -8,7 +8,6 @@ import sys
 
 import requests
 from selenium import webdriver
-from selenium.common.exceptions import *
 
 # returns a datetime object now for convenience
 def now():
