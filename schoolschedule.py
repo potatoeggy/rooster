@@ -52,6 +52,7 @@ if __name__ == "__main__":
 				com.debug(f"All classes found for current period. Sleeping for {seconds_until_next_period} seconds for next period at {next_period_time}")
 
 				current_period += 1
+				# TODO: use a better sleep that will not desync
 				time.sleep(seconds_until_next_period)
 			except ValueError:
 				# expected if a class has been skipped
