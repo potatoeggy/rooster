@@ -214,10 +214,10 @@ class driver:
 			pass
 		elif "Your meeting code has expired" in html:
 			# right after class or link needs to be updated, or class was dismissed early
-			com.send_help(f"Link needs to be updated for {c.name}", abort=False)
+			com.send_help(f"Link needs to be updated for {c.name}")
 			return True
 		elif "Invalid video call name" in html:
-			com.send_help(f"Invalid link for {c.name}", abort=False)
+			com.send_help(f"Invalid link for {c.name}")
 			return True
 		elif "Getting ready" in html:
 			com.send_help("Delay is too slow, Google is still getting ready")
@@ -225,7 +225,7 @@ class driver:
 			com.send_help(f"Google bot detection triggered or not authenticated with {c.name}")
 			return True
 		else:
-			com.send_help(f"Something unexpected happened with {c.name}", abort=False)
+			com.send_help(f"Something unexpected happened with {c.name}")
 		return False
 		
 
