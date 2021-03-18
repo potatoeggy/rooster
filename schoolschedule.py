@@ -41,8 +41,8 @@ if __name__ == "__main__":
 		seconds_until_first_period = (earliest-now()).total_seconds()
 		com.debug(f"Sleeping for {seconds_until_first_period} seconds until first period.")
 		time.sleep(seconds_until_first_period)
-		current_period = 0
-		
+	
+	current_period = 0	
 	while now() < latest:
 		if all(found[current_period]):
 			try:
