@@ -192,7 +192,7 @@ class driver:
 			return True
 		try:
 			self.driver.get(c.link)
-			time.sleep(3)
+			time.sleep(10)
 		except InvalidSessionIdException:
 			com.send_help("Invalid session ID, skipping classes, expect borks")
 			return True
@@ -225,8 +225,6 @@ class driver:
 			com.send_help(f"Google bot detection triggered or not authenticated with {c.name}")
 			return True
 		else:
-			with open("boompie.html") as file:
-				file.write(html)
 			com.send_help(f"Something unexpected happened with {c.name}")
 		return False
 		
