@@ -198,6 +198,9 @@ class driver:
 		except InvalidSessionIdException:
 			com.send_help("Invalid session ID, skipping classes, expect borks")
 			return True
+		except TimeoutException:
+			com.send_help(f"Timed out pinging class {c.name}.")
+			return False
 		
 		html = self.driver.page_source
 		if "Ready to join?" in html or "Ask to join" in html:
