@@ -206,7 +206,7 @@ class driver:
 			return False
 		
 		html = self.driver.page_source
-		if "Ready to join?" in html or "Ask to join" in html:
+		if "Join now" in html or "Ready to join?" in html or "are in this call" in html or "Ask to join" in html:
 			# meet is open
 			com.send_message(c.get_discord_message())
 			return True
