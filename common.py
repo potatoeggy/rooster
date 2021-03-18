@@ -28,9 +28,6 @@ Browser options
   --driver-path <path>			Use <path> as the path to the driver executable.
   --driver-log <path>			Use <path> as the path to the driver log file.
 
-Special options
-  --use-class-order			Override the order of classes based on period.
-
 Secrets options
   --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
   --yrdsb-password <password>		Use <password> as the password for authentication with YRDSB for Meet lookups.
