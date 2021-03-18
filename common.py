@@ -138,10 +138,8 @@ class communicator:
 			self.debug("Something borked when sending a message to Discord", 2)
 
 	
-	def send_help(self, string="", abort=True):
+	def send_help(self, string=""):
 		self.send_message(f"<@!{self.admin_user_id}>, manual intervention required! {string}", priority=2)
-		if abort:
-			exit()
 
 
 class driver:
@@ -168,7 +166,7 @@ class driver:
 			exit()
 		
 		self.driver.implicitly_wait(10)
-		self.driver.set_page_load_timeout(5)
+		self.driver.set_page_load_timeout(10)
 
 		com.debug("Logging into Google...")
 		# login to google to use lookup links

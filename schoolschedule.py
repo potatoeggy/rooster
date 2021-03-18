@@ -56,6 +56,7 @@ if __name__ == "__main__":
 				time.sleep(seconds_until_next_period)
 			except ValueError:
 				# expected if a class has been skipped
+				com.debug("Negative sleep time, may cause issues")
 				pass
 			except IndexError:
 				# All classes found and this is last period, we can exit now
@@ -65,9 +66,10 @@ if __name__ == "__main__":
 			if found[current_period][i] or not c.enabled:
 				continue
 			elif periods[current_period].end_time <= now(): # link not found for too long
-				com.debug("Skipped class {0} as it is past its end time".format(c.name))
+				com.debug(f"Skipped class {c.name} as it is past its end time.")
 				found[current_period][i] = True
 			elif periods[current_period].start_time <= now(): # between end and start times
+				com.debug(f"Attempting to ping {c.name}")
 				found[current_period][i] = driver.ping_meet(c, com)
 		
 		time.sleep(5)
