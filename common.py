@@ -199,7 +199,8 @@ class driver:
 			com.send_help("Invalid session ID, skipping classes, expect borks")
 			return True
 		except TimeoutException:
-			com.send_help(f"Timed out pinging class {c.name}.")
+			com.debug(f"Timed out pinging class {c.name}.", 2)
+			time.sleep(30)
 			return False
 		
 		html = self.driver.page_source
