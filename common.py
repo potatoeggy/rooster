@@ -157,6 +157,11 @@ class driver:
 			self.driver = webdriver.Firefox(options=options, firefox_profile=profile, executable_path=com.driver_path, service_log_path=com.driver_log)
 		elif com.render_backend == "chromedriver":
 			options = webdriver.ChromeOptions()
+			options.add_argument("no-sandbox")
+			options.add_argument("disable-infobars")
+			options.add_argument("disable-dev-shm-usage")
+			options.add_argument("disable-browser-side-navigation")
+			options.add_argument("disable-gpu")
 			if not com.worker_visible:
 				options.add_argument("headless")
 				options.add_argument("user-agent=\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36\"")
@@ -192,7 +197,7 @@ class driver:
 			return True
 		try:
 			self.driver.get(c.link)
-			time.sleep(10)
+			time.sleep(3)
 		except InvalidSessionIdException:
 			com.send_help("Invalid session ID, skipping classes, expect borks")
 			return True
