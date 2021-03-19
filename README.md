@@ -30,6 +30,7 @@ General options
   --config <path>			Use configuration file at <path>.
   --verbose				Run with extended output (debug mode).
   --run-on-weekends			Do not exit when weekend is detected.
+  --dry-run				Do not send Discord messages.
   --help, -h				Print this help screen.
 
 Browser options

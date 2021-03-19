@@ -20,6 +20,7 @@ General options
   --config <path>			Use configuration file at <path>.
   --verbose				Run with extended output (debug mode).
   --run-on-weekends			Do not exit when weekend is detected.
+  --dry-run				Do not send Discord messages.
   --help, -h				Print this help screen.
 
 Browser options
@@ -55,7 +56,7 @@ class Period:
 		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["end_time"].split(":")))))
 
 class communicator:
-	__slots__ = ["first_log", "verbose", "period_data", "class_data", "gmail_address", "yrdsb_password", "webhook_url", "admin_user_id", "worker_visible", "render_backend", "driver_path", "driver_log", "run_on_weekends", "class_order", "override_days"]
+	__slots__ = ["dry_run", "first_log", "verbose", "period_data", "class_data", "gmail_address", "yrdsb_password", "webhook_url", "admin_user_id", "worker_visible", "render_backend", "driver_path", "driver_log", "run_on_weekends", "class_order", "override_days"]
 	def __init__(self):
 		self.verbose = True
 		self.first_log = True
@@ -112,6 +113,7 @@ class communicator:
 		self.run_on_weekends = check_config("run_on_weekends", False)
 		self.class_order = check_config("class_order", [])
 		self.override_days = check_config("override_days", [])
+		self.dry_run = check_config("dry_run", False)
 		override_period_data = check_config("override_period_data", [])
 	
 		if (not self.run_on_weekends) and self.now().weekday() >= 5:
@@ -135,10 +137,11 @@ class communicator:
 		if string != "":
 			self.debug(string, priority)
 		payload = { "content": string }
-		try:
-			requests.post(self.webhook_url, data=payload)
-		except Exception:
-			self.debug("Something borked when sending a message to Discord", 2)
+		if not self.dry_run:
+			try:
+				requests.post(self.webhook_url, data=payload)
+			except Exception:
+				self.debug("Something borked when sending a message to Discord", 2)
 
 	
 	def send_help(self, string=""):
