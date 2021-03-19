@@ -131,7 +131,7 @@ class communicator:
 			file_mode = "w" if self.first_log else "a"
 			self.first_log = False
 			with open("rooster.log", file_mode) as file:
-				file.write(log_message)
+				file.write(log_message + "\n")
 	
 	def send_message(self, string, priority=0):
 		if string != "":
