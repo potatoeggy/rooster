@@ -55,9 +55,10 @@ class Period:
 		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["end_time"].split(":")))))
 
 class communicator:
-	__slots__ = ["verbose", "period_data", "class_data", "gmail_address", "yrdsb_password", "webhook_url", "admin_user_id", "worker_visible", "render_backend", "driver_path", "driver_log", "run_on_weekends", "class_order", "override_days"]
+	__slots__ = ["first_log", "verbose", "period_data", "class_data", "gmail_address", "yrdsb_password", "webhook_url", "admin_user_id", "worker_visible", "render_backend", "driver_path", "driver_log", "run_on_weekends", "class_order", "override_days"]
 	def __init__(self):
 		self.verbose = True
+		self.first_log = True
 		self.read_config()
 
 	def now(self):
@@ -123,7 +124,12 @@ class communicator:
 	def debug(self, string, priority: int = 0):
 		prefixes = ["INFO", "WARN", "ERROR"]
 		if self.verbose or priority > 0: # do not report debug statements
-			print(f"{self.now()}: [{prefixes[priority]}]: {string}")
+			log_message = f"{self.now()}: [{prefixes[priority]}]: {string}"
+			print(log_message)
+			file_mode = "w" if self.first_log else "a"
+			self.first_log = False
+			with open("rooster.log", file_mode) as file:
+				file.write(log_message)
 	
 	def send_message(self, string, priority=0):
 		if string != "":
