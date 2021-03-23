@@ -56,7 +56,7 @@ class Period:
 		self.end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(*(map(int, jsondict["end_time"].split(":")))))
 
 class communicator:
-	__slots__ = ["dry_run", "first_log", "verbose", "period_data", "class_data", "gmail_address", "yrdsb_password", "webhook_url", "admin_user_id", "worker_visible", "render_backend", "driver_path", "driver_log", "run_on_weekends", "class_order", "override_days"]
+	__slots__ = ["dry_run", "first_log", "verbose", "period_data", "class_data", "gapps_username", "yrdsb_password", "webhook_url", "admin_user_id", "worker_visible", "render_backend", "driver_path", "driver_log", "run_on_weekends", "class_order", "override_days"]
 	def __init__(self):
 		self.verbose = True
 		self.first_log = True
@@ -97,7 +97,7 @@ class communicator:
 			return result
 		
 		# mandatory fields, we want to crash if these are not found
-		self.gmail_address = obj["gmail_address"] # gapps account
+		self.gapps_username = obj["gapps_username"] # gapps account
 		self.yrdsb_password = obj["yrdsb_password"] # password in plaintext :P
 		self.webhook_url = obj["discord_url"] # discord webhook url
 		self.admin_user_id = obj["admin_user_id"] # discord user id to ping in emergencies
@@ -181,12 +181,9 @@ class driver:
 
 		com.debug("Logging into Google...")
 		# login to google to use lookup links
-		self.driver.get("https://accounts.google.com/ServiceLogin?continue=https://google.com")
-		self.driver.implicitly_wait(10)
-		self.driver.find_element_by_id("identifierId").send_keys(com.gmail_address) # input email
-		self.driver.find_element_by_id("identifierNext").click()
+		self.driver.get("https://google.yrdsb.ca/LoginFormIdentityProvider/Login.aspx")
 
-		self.driver.find_element_by_id("UserName").send_keys(com.gmail_address.split("@")[0]) # YRDSB login field
+		self.driver.find_element_by_id("UserName").send_keys(com.gapps_username) # YRDSB login field
 		self.driver.find_element_by_id("Password").send_keys(com.yrdsb_password)
 		self.driver.find_element_by_id("LoginButton").click()
 
@@ -209,7 +206,9 @@ class driver:
 			return True
 		except TimeoutException:
 			com.debug(f"Timed out pinging class {c.name}.", 2)
-			time.sleep(30)
+			self.driver.close()
+			time.sleep(20)
+			self.__init__(com)
 			return False
 		
 		html = self.driver.page_source

@@ -40,7 +40,7 @@ Browser options
   --driver-log <path>			Use <path> as the path to the driver log file.
 
 Secrets options
-  --gmail-address <address>		Use <address> as the Google account email address for Meet lookups.
+  --gapps-username <username>		Use <username> as the YRDSB Google username for Meet lookups.
   --yrdsb-password <password>		Use <password> as the password for authentication with YRDSB for Meet lookups.
   --discord-url <url>			Use <url> as the URL to send Discord webhooks to.
   --admin-user-id <id>			Use <id> as the Discord user ID to ping in case of emergencies.

@@ -1,5 +1,5 @@
 {
-"gmail_address": "XXXXXXXXX@gapps.yrdsb.ca",
+"gapps_username": "XXXXXXXXX",
 "yrdsb_password": "XXXXXXXXXXX",
 "worker_visible": false,
 "geckodriver_path": "/usr/bin/geckodriver",
