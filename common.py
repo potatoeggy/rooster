@@ -181,7 +181,7 @@ class driver:
 
 		com.debug("Logging into Google...")
 		# login to google to use lookup links
-		self.driver.get("https://google.yrdsb.ca/LoginFormIdentityProvider/Login.aspx")
+		self.driver.get("https://google.yrdsb.ca/LoginFormIdentityProvider/Login.aspx?ReturnUrl=%2fLoginFormIdentityProvider%2fDefault.aspx")
 
 		self.driver.find_element_by_id("UserName").send_keys(com.gapps_username) # YRDSB login field
 		self.driver.find_element_by_id("Password").send_keys(com.yrdsb_password)
