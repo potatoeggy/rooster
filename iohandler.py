@@ -116,4 +116,27 @@ class Driver:
 
         self.log.info("Google authentication successful.")
         
+    def ping_meet(self, link) -> bool:
+        if not "meet.google.com" in link:
+            self.log.debug(f"{link} is not a Meet link, assume True")
+            return True
+        
+        try:
+            self.driver.get(link)
+            time.sleep(2)
+        except InvalidSessionIdException:
+            self.log.warn("Invalid session ID, restarting driver...")
+            self.new_driver()
+            return False
+        except TimeoutException:
+            self.log.warn("Timed out while loading link, restarting driver...")
+            time.sleep(10)
+            self.new_driver()
+            return False
+        
+        html = self.driver.page_source
+        if "Join now" in html or "Ask to join" in html or "are in this call" in html:
+            # meet is open
+            return True
+        return False
         
