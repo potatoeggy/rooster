@@ -44,7 +44,7 @@ class Config:
         self.read()
     
     def read(self):
-        self.config.read(os.path.abspath(os.path.dirname(__file__)) + "config.ini")
+        self.config.read(["config.ini", os.path.abspath(os.path.dirname(__file__)) + "config.ini"])
         general = self.config["rooster"]
         self.log_level = general.getint("LogLevel", fallback=1)
         self.admin_ids = list(map(int, general.get("AdminIds", fallback="").split(",")))
@@ -84,6 +84,9 @@ class Driver:
         self.config = config
         self.driver = None
         self.new_driver()
+    
+    def close(self):
+        self.driver.quit()
     
     def new_driver(self):
         self.log.debug("Initialising web engine...")
