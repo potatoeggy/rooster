@@ -1,0 +1,10 @@
+[rooster]
+LogLevel=1
+AdminIds=12345678,87654321,09876544
+Headless=False
+DryRun=False
+
+[secrets]
+Email=XXXXXXXXXX@gapps.yrdsb.ca
+Password=XXXXXXXX
+BotToken=discord_bot_token_here
