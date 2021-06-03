@@ -70,7 +70,7 @@ class Data:
     
     def write(self):
         with open("data.json", "w") as file:
-            json.dump(self.data, file)
+            json.dump(self.data, file, indent=4)
 
 class Driver:
     pass
