@@ -41,6 +41,7 @@ class Config:
     def __init__(self, log: Logger):
         self.log = log
         self.config = configparser.ConfigParser()
+        self.read()
     
     def read(self):
         self.config.read(os.path.abspath(os.path.dirname(__file__)) + "config.ini")
@@ -49,6 +50,7 @@ class Config:
         self.admin_ids = list(map(int, general.get("AdminIds", fallback="").split(",")))
         self.headless = general.getboolean("Headless", fallback=True)
         self.dry_run = general.getboolean("DryRun", fallback=False)
+        self.debug_guild = general.getint("DebugGuild", fallback=None)
 
         secrets = self.config["secrets"]
         self.email = secrets.get("Email")
@@ -62,6 +64,7 @@ class Data:
     def __init__(self, log: Logger):
         self.data = {}
         self.log = log
+        self.read()
     
     def read(self):
         try:
