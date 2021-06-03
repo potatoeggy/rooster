@@ -5,6 +5,6 @@ Headless=False
 DryRun=False
 
 [secrets]
-Email=XXXXXXXXXX@gapps.yrdsb.ca
+Username=XXXXXXXXXX
 Password=XXXXXXXX
 BotToken=discord_bot_token_here

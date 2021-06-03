@@ -1,6 +1,9 @@
 import json
 import configparser
 import os
+import time
+from selenium import webdriver
+from selenium.common.exceptions import *
 
 class Logger:
     LOG_STRINGS = ["DEBUG", " INFO", " WARN", "ERROR"]
@@ -73,4 +76,44 @@ class Data:
             json.dump(self.data, file, indent=4)
 
 class Driver:
-    pass
+    def __init__(self, log: Logger, config: Config):
+        self.log = log
+        self.config = config
+        self.driver = None
+        self.new_driver()
+    
+    def new_driver(self):
+        self.log.debug("Initialising web engine...")
+        if self.driver is not None:
+            self.driver.quit()
+        
+        options = webdriver.ChromeOptions()
+        options.add_argument("no-sandbox")
+        options.add_argument("disable-dev-shm-usage")
+        if self.config.headless:
+            options.add_argument("headless")
+            options.add_argument("user-agent=\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36\"")
+        self.driver = webdriver.Chrome(options=options)
+
+        self.driver.implicitly_wait(10)
+        self.driver.set_page_load_timeout(15)
+        self.log.info("Web engine initialised.")
+
+        self.log.debug("Logging in to Google...")
+        self.driver.get("https://google.yrdsb.ca")
+        self.driver.find_element_by_id("UserName").send_keys(self.config.email.split("@")[0])
+        self.driver.find_element_by_id("Password").send_keys(self.config.password)
+        self.driver.find_element_by_id("LoginButton").click()
+
+        time.sleep(1)
+        if "speedbump" in self.driver.current_url:
+            self.driver.find_element_by_xpath('//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/div/button').click()
+            self.log.debug("Speedbump passed.")
+
+        time.sleep(1)
+        if "drive.google.com" not in self.driver.current_url:
+            self.log.error("Authentication failed.", abort=True)
+
+        self.log.info("Google authentication successful.")
+        
+        
