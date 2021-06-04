@@ -15,6 +15,7 @@ config = iohandler.Config(log)
 data = iohandler.Data(log)
 driver = iohandler.Driver(log, config)
 
+
 class Rooster(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -28,4 +29,5 @@ if __name__ == "__main__":
     @bot.event
     async def on_ready():
         log.info(f"Logged in as {bot.user}")
+
     bot.run(config.token)
